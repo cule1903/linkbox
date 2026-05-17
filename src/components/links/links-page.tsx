@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { LinkCard } from "@/components/links/link-card";
 import { filterLinks, sortLinks, type LinkSort } from "@/lib/link-utils";
-import { mockCategories } from "@/lib/mock-links";
 import type { LinkItem } from "@/types/link";
 
 export type LinkPageFilters = {
@@ -19,6 +18,7 @@ export type LinkPageFilters = {
 };
 
 type LinksPageProps = {
+  categories: string[];
   initialFilters?: LinkPageFilters;
   links: LinkItem[];
   title?: string;
@@ -30,6 +30,7 @@ type LinksPageProps = {
 };
 
 export function LinksPage({
+  categories,
   initialFilters,
   links,
   title = "전체 링크",
@@ -137,7 +138,7 @@ export function LinksPage({
           value={category}
         >
           <option value="">전체 카테고리</option>
-          {mockCategories.map((cat) => (
+          {categories.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
             </option>

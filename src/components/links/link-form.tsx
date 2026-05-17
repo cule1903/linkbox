@@ -8,10 +8,10 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { hasDuplicateUrl } from "@/lib/link-utils";
 import { shouldCommitTagInput } from "@/lib/links";
-import { mockCategories } from "@/lib/mock-links";
 import type { LinkDraft, LinkItem, LinkPriority, LinkStatus } from "@/types/link";
 
 type LinkFormProps = {
+  categories: string[];
   existingLinks: LinkItem[];
   isSaving?: boolean;
   link?: LinkItem;
@@ -20,6 +20,7 @@ type LinkFormProps = {
 };
 
 export function LinkForm({
+  categories,
   existingLinks,
   isSaving = false,
   link,
@@ -146,7 +147,7 @@ export function LinkForm({
             value={formData.category ?? ""}
           >
             <option value="">카테고리 선택</option>
-            {mockCategories.map((category) => (
+            {categories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
