@@ -7,12 +7,15 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkCard } from "@/components/links/link-card";
+import type { LinkPageFilters } from "@/components/links/links-page";
 import type { LinkItem } from "@/types/link";
 
 type DashboardPageProps = {
   links: LinkItem[];
   onDeleteLink: (id: string) => void;
   onEditLink: (link: LinkItem) => void;
+  onOpenFilteredLinks: (filters?: LinkPageFilters) => void;
+  onOpenFavorites: () => void;
   onToggleFavorite: (id: string) => void;
   onViewLink: (link: LinkItem) => void;
 };
@@ -21,6 +24,8 @@ export function DashboardPage({
   links,
   onDeleteLink,
   onEditLink,
+  onOpenFilteredLinks,
+  onOpenFavorites,
   onToggleFavorite,
   onViewLink,
 }: DashboardPageProps) {
@@ -67,30 +72,35 @@ export function DashboardPage({
           label="전체 링크"
           value={stats.total}
           helper="저장된 모든 링크"
+          onClick={() => onOpenFilteredLinks()}
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4 text-blue-600" />}
           label="읽을 예정"
           value={stats.unread}
           helper="아직 읽지 않은 링크"
+          onClick={() => onOpenFilteredLinks({ status: "unread" })}
         />
         <StatCard
           icon={<BookOpen className="h-4 w-4 text-amber-600" />}
           label="읽는 중"
           value={stats.reading}
           helper="현재 확인 중"
+          onClick={() => onOpenFilteredLinks({ status: "reading" })}
         />
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
           label="완료"
           value={stats.completed}
           helper="읽기를 마친 링크"
+          onClick={() => onOpenFilteredLinks({ status: "completed" })}
         />
         <StatCard
           icon={<Star className="h-4 w-4 text-amber-500" />}
           label="즐겨찾기"
           value={stats.favorites}
           helper="중요하게 표시한 링크"
+          onClick={onOpenFavorites}
         />
       </div>
 
@@ -132,15 +142,16 @@ export function DashboardPage({
             ) : (
               <div className="space-y-3">
                 {topCategories.map(([category, count]) => (
-                  <div
-                    className="flex items-center justify-between"
+                  <button
+                    className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left transition-colors hover:bg-slate-50"
                     key={category}
+                    onClick={() => onOpenFilteredLinks({ category })}
                   >
                     <span className="text-sm">{category}</span>
                     <span className="rounded bg-slate-100 px-2 py-1 text-sm">
                       {count}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -156,10 +167,12 @@ function StatCard({
   icon,
   label,
   value,
+  onClick,
 }: {
   helper: string;
   icon: React.ReactNode;
   label: string;
+  onClick: () => void;
   value: number;
 }) {
   return (
@@ -168,7 +181,18 @@ function StatCard({
         <CardTitle className="text-sm">{label}</CardTitle>
         {icon}
       </CardHeader>
-      <CardContent>
+      <CardContent
+        className="cursor-pointer rounded-b-lg transition-colors hover:bg-slate-50"
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+      >
         <div className="text-2xl font-semibold">{value}</div>
         <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
       </CardContent>

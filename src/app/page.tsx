@@ -6,7 +6,7 @@ import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { AppPage, AppSidebar } from "@/components/layout/app-sidebar";
 import { LinkDetailPage } from "@/components/links/link-detail-page";
 import { LinkForm } from "@/components/links/link-form";
-import { LinksPage } from "@/components/links/links-page";
+import { LinkPageFilters, LinksPage } from "@/components/links/links-page";
 import { Dialog } from "@/components/ui/dialog";
 import {
   getAuthErrorMessage,
@@ -38,6 +38,8 @@ export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState(mockUser.email);
   const [currentPage, setCurrentPage] = useState<AppPage>("dashboard");
+  const [linkPageFilters, setLinkPageFilters] = useState<LinkPageFilters>({});
+  const [linkPageFiltersKey, setLinkPageFiltersKey] = useState(0);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -304,6 +306,25 @@ export default function Home() {
     if (page !== "detail") {
       setSelectedLink(null);
     }
+
+    if (page === "links") {
+      setLinkPageFilters({});
+      setLinkPageFiltersKey((current) => current + 1);
+    }
+  }
+
+  function handleOpenFilteredLinks(filters: LinkPageFilters = {}) {
+    setLinkPageFilters(filters);
+    setLinkPageFiltersKey((current) => current + 1);
+    setSelectedLink(null);
+    setCurrentPage("links");
+  }
+
+  function handleOpenFavorites() {
+    setLinkPageFilters({ favoritesOnly: true });
+    setLinkPageFiltersKey((current) => current + 1);
+    setSelectedLink(null);
+    setCurrentPage("favorites");
   }
 
   if (!hasHydrated || isSessionChecking) {
@@ -351,6 +372,8 @@ export default function Home() {
                   links={links}
                   onDeleteLink={handleDeleteLink}
                   onEditLink={handleEditLink}
+                  onOpenFavorites={handleOpenFavorites}
+                  onOpenFilteredLinks={handleOpenFilteredLinks}
                   onToggleFavorite={handleToggleFavorite}
                   onViewLink={handleViewLink}
                 />
@@ -366,7 +389,9 @@ export default function Home() {
                 <PageLoading />
               ) : (
                 <LinksPage
+                  key={`links-${linkPageFiltersKey}`}
                   links={links}
+                  initialFilters={linkPageFilters}
                   onAddLink={handleAddLink}
                   onDeleteLink={handleDeleteLink}
                   onEditLink={handleEditLink}
@@ -385,7 +410,9 @@ export default function Home() {
                 <PageLoading />
               ) : (
                 <LinksPage
+                  key={`favorites-${linkPageFiltersKey}`}
                   links={favoriteLinks}
+                  initialFilters={linkPageFilters}
                   onAddLink={handleAddLink}
                   onDeleteLink={handleDeleteLink}
                   onEditLink={handleEditLink}

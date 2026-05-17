@@ -11,7 +11,15 @@ import { filterLinks, sortLinks, type LinkSort } from "@/lib/link-utils";
 import { mockCategories } from "@/lib/mock-links";
 import type { LinkItem } from "@/types/link";
 
+export type LinkPageFilters = {
+  category?: string;
+  favoritesOnly?: boolean;
+  priority?: string;
+  status?: string;
+};
+
 type LinksPageProps = {
+  initialFilters?: LinkPageFilters;
   links: LinkItem[];
   title?: string;
   onAddLink: () => void;
@@ -22,6 +30,7 @@ type LinksPageProps = {
 };
 
 export function LinksPage({
+  initialFilters,
   links,
   title = "전체 링크",
   onAddLink,
@@ -31,10 +40,12 @@ export function LinksPage({
   onViewLink,
 }: LinksPageProps) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [category, setCategory] = useState(initialFilters?.category ?? "");
+  const [status, setStatus] = useState(initialFilters?.status ?? "");
+  const [priority, setPriority] = useState(initialFilters?.priority ?? "");
+  const [favoritesOnly, setFavoritesOnly] = useState(
+    initialFilters?.favoritesOnly ?? false,
+  );
   const [sortBy, setSortBy] = useState<LinkSort>("newest");
 
   const filteredAndSortedLinks = useMemo(
