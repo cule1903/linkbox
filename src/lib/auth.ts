@@ -4,7 +4,15 @@ type PublicEnv = Record<string, string | undefined>;
 
 let browserClient: SupabaseClient | null = null;
 
-export function hasSupabaseConfig(env: PublicEnv = process.env) {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+export function hasSupabaseConfig(
+  env: PublicEnv = {
+    NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey,
+  },
+) {
   return Boolean(
     env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
@@ -17,10 +25,7 @@ export function getSupabaseBrowserClient() {
   }
 
   if (!browserClient) {
-    browserClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    browserClient = createClient(supabaseUrl, supabaseAnonKey);
   }
 
   return browserClient;

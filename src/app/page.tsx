@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AuthPage } from "@/components/auth/auth-page";
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { AppPage, AppSidebar } from "@/components/layout/app-sidebar";
@@ -16,7 +16,14 @@ import {
 import { mockLinks, mockUser } from "@/lib/mock-links";
 import type { LinkDraft, LinkItem } from "@/types/link";
 
+const subscribeToHydration = () => () => {};
+
 export default function Home() {
+  const hasHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const isSupabaseConfigured = hasSupabaseConfig();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -204,7 +211,7 @@ export default function Home() {
     }
   }
 
-  if (isSessionChecking) {
+  if (!hasHydrated || isSessionChecking) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <p className="text-sm text-muted-foreground">로그인 상태를 확인하는 중...</p>
