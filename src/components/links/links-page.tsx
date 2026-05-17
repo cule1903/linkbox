@@ -23,7 +23,7 @@ type LinksPageProps = {
 
 export function LinksPage({
   links,
-  title = "All Links",
+  title = "전체 링크",
   onAddLink,
   onDeleteLink,
   onEditLink,
@@ -69,13 +69,12 @@ export function LinksPage({
         <div>
           <h1 className="mb-2 text-3xl font-semibold">{title}</h1>
           <p className="text-muted-foreground">
-            {filteredAndSortedLinks.length} link
-            {filteredAndSortedLinks.length !== 1 ? "s" : ""} found
+            {filteredAndSortedLinks.length}개의 링크를 찾았습니다
           </p>
         </div>
         <Button onClick={onAddLink}>
           <Plus className="h-4 w-4" />
-          Add Link
+          링크 추가
         </Button>
       </div>
 
@@ -85,7 +84,7 @@ export function LinksPage({
           <Input
             className="pl-9"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search links by title, URL, memo, or tag..."
+            placeholder="제목, URL, 메모, 태그로 검색..."
             value={search}
           />
         </div>
@@ -96,14 +95,14 @@ export function LinksPage({
             onChange={(event) => setSortBy(event.target.value as LinkSort)}
             value={sortBy}
           >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="title">Title A-Z</option>
-            <option value="priority">Priority</option>
+            <option value="newest">최신순</option>
+            <option value="oldest">오래된순</option>
+            <option value="title">제목순</option>
+            <option value="priority">우선순위순</option>
           </Select>
 
           <Button
-            aria-label="Show favorites only"
+            aria-label="즐겨찾기만 보기"
             onClick={() => setFavoritesOnly(!favoritesOnly)}
             size="icon"
             variant={favoritesOnly ? "default" : "outline"}
@@ -118,7 +117,7 @@ export function LinksPage({
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">Filters:</span>
+          <span className="text-sm">필터:</span>
         </div>
 
         <Select
@@ -126,7 +125,7 @@ export function LinksPage({
           onChange={(event) => setCategory(event.target.value)}
           value={category}
         >
-          <option value="">All Categories</option>
+          <option value="">전체 카테고리</option>
           {mockCategories.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
@@ -139,10 +138,10 @@ export function LinksPage({
           onChange={(event) => setStatus(event.target.value)}
           value={status}
         >
-          <option value="">All Status</option>
-          <option value="unread">To Read</option>
-          <option value="reading">Reading</option>
-          <option value="completed">Completed</option>
+          <option value="">전체 상태</option>
+          <option value="unread">읽을 예정</option>
+          <option value="reading">읽는 중</option>
+          <option value="completed">완료</option>
         </Select>
 
         <Select
@@ -150,15 +149,15 @@ export function LinksPage({
           onChange={(event) => setPriority(event.target.value)}
           value={priority}
         >
-          <option value="">All Priority</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
+          <option value="">전체 우선순위</option>
+          <option value="high">높음</option>
+          <option value="medium">보통</option>
+          <option value="low">낮음</option>
         </Select>
 
         {activeFiltersCount > 0 && (
           <Button onClick={clearFilters} size="sm" variant="ghost">
-            Clear filters
+            필터 초기화
             <Badge className="ml-1" variant="secondary">
               {activeFiltersCount}
             </Badge>
@@ -171,13 +170,13 @@ export function LinksPage({
           <div className="rounded-lg bg-slate-50 py-12 text-center">
             <p className="mb-4 text-muted-foreground">
               {links.length === 0
-                ? "No links saved yet. Add your first link to get started."
-                : "No links match your filters. Try adjusting your search criteria."}
+                ? "아직 저장된 링크가 없습니다. 첫 링크를 추가해보세요."
+                : "조건에 맞는 링크가 없습니다. 검색어나 필터를 조정해보세요."}
             </p>
             {links.length === 0 && (
               <Button onClick={onAddLink}>
                 <Plus className="h-4 w-4" />
-                Add Your First Link
+                첫 링크 추가
               </Button>
             )}
           </div>

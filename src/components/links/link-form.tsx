@@ -86,12 +86,12 @@ export function LinkForm({
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <label className="block space-y-2">
-        <span className="text-sm font-medium">Title *</span>
+        <span className="text-sm font-medium">제목 *</span>
         <Input
           onChange={(event) =>
             setFormData({ ...formData, title: event.target.value })
           }
-          placeholder="Enter link title"
+          placeholder="링크 제목을 입력하세요"
           required
           value={formData.title}
         />
@@ -110,18 +110,18 @@ export function LinkForm({
         />
         {duplicateUrl && (
           <span className="text-sm text-red-600">
-            This URL is already saved in your LinkBox.
+            이미 저장된 URL입니다.
           </span>
         )}
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium">Memo</span>
+        <span className="text-sm font-medium">메모</span>
         <Textarea
           onChange={(event) =>
             setFormData({ ...formData, description: event.target.value })
           }
-          placeholder="Add a short note about this link"
+          placeholder="이 링크에 대한 짧은 메모를 남겨보세요"
           rows={3}
           value={formData.description ?? ""}
         />
@@ -129,14 +129,14 @@ export function LinkForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block space-y-2">
-          <span className="text-sm font-medium">Category</span>
+          <span className="text-sm font-medium">카테고리</span>
           <Select
             onChange={(event) =>
               setFormData({ ...formData, category: event.target.value })
             }
             value={formData.category ?? ""}
           >
-            <option value="">Select category</option>
+            <option value="">카테고리 선택</option>
             {mockCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
@@ -146,7 +146,7 @@ export function LinkForm({
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium">Reading Status</span>
+          <span className="text-sm font-medium">읽기 상태</span>
           <Select
             onChange={(event) =>
               setFormData({
@@ -156,15 +156,15 @@ export function LinkForm({
             }
             value={formData.status}
           >
-            <option value="unread">To Read</option>
-            <option value="reading">Reading</option>
-            <option value="completed">Completed</option>
+            <option value="unread">읽을 예정</option>
+            <option value="reading">읽는 중</option>
+            <option value="completed">완료</option>
           </Select>
         </label>
       </div>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium">Priority</span>
+        <span className="text-sm font-medium">우선순위</span>
         <Select
           onChange={(event) =>
             setFormData({
@@ -174,19 +174,19 @@ export function LinkForm({
           }
           value={formData.priority}
         >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
+          <option value="low">낮음</option>
+          <option value="medium">보통</option>
+          <option value="high">높음</option>
         </Select>
       </label>
 
       <div className="space-y-2">
         <label className="block space-y-2">
-          <span className="text-sm font-medium">Tags</span>
+          <span className="text-sm font-medium">태그</span>
           <Input
             onChange={(event) => setTagInput(event.target.value)}
             onKeyDown={handleAddTag}
-            placeholder="Type and press Enter to add tags"
+            placeholder="태그를 입력하고 엔터를 누르세요"
             value={tagInput}
           />
         </label>
@@ -212,7 +212,7 @@ export function LinkForm({
       </div>
 
       <label className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
-        <span className="text-sm font-medium">Mark as favorite</span>
+        <span className="text-sm font-medium">즐겨찾기로 표시</span>
         <input
           checked={formData.is_favorite}
           className="h-4 w-4"
@@ -225,10 +225,10 @@ export function LinkForm({
 
       <div className="flex gap-3 pt-4">
         <Button className="flex-1" disabled={duplicateUrl} type="submit">
-          {link ? "Update Link" : "Save Link"}
+          {link ? "링크 수정" : "링크 저장"}
         </Button>
         <Button onClick={onCancel} type="button" variant="outline">
-          Cancel
+          취소
         </Button>
       </div>
     </form>

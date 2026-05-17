@@ -55,53 +55,53 @@ export function DashboardPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="mb-2 text-3xl font-semibold">Dashboard</h1>
+        <h1 className="mb-2 text-3xl font-semibold">대시보드</h1>
         <p className="text-muted-foreground">
-          Welcome back. Here is an overview of your saved links.
+          저장한 링크의 현황을 한눈에 확인하세요.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={<Bookmark className="h-4 w-4 text-muted-foreground" />}
-          label="Total Links"
+          label="전체 링크"
           value={stats.total}
-          helper="All saved links"
+          helper="저장된 모든 링크"
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4 text-blue-600" />}
-          label="To Read"
+          label="읽을 예정"
           value={stats.unread}
-          helper="Pending items"
+          helper="아직 읽지 않은 링크"
         />
         <StatCard
           icon={<BookOpen className="h-4 w-4 text-amber-600" />}
-          label="Reading"
+          label="읽는 중"
           value={stats.reading}
-          helper="In progress"
+          helper="현재 확인 중"
         />
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-          label="Completed"
+          label="완료"
           value={stats.completed}
-          helper="Finished reading"
+          helper="읽기를 마친 링크"
         />
         <StatCard
           icon={<Star className="h-4 w-4 text-amber-500" />}
-          label="Favorites"
+          label="즐겨찾기"
           value={stats.favorites}
-          helper="Starred items"
+          helper="중요하게 표시한 링크"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <h2 className="text-xl font-semibold">Recent Links</h2>
+          <h2 className="text-xl font-semibold">최근 저장한 링크</h2>
           {recentLinks.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Bookmark className="mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-muted-foreground">No links saved yet</p>
+                <p className="text-muted-foreground">아직 저장된 링크가 없습니다</p>
               </CardContent>
             </Card>
           ) : (
@@ -122,12 +122,12 @@ export function DashboardPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Categories</CardTitle>
+            <CardTitle>카테고리</CardTitle>
           </CardHeader>
           <CardContent>
             {topCategories.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                No categories yet
+                아직 카테고리가 없습니다
               </p>
             ) : (
               <div className="space-y-3">

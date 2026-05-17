@@ -162,7 +162,7 @@ export default function Home() {
               onEditLink={handleEditLink}
               onToggleFavorite={handleToggleFavorite}
               onViewLink={handleViewLink}
-              title="Favorites"
+              title="즐겨찾기"
             />
           )}
 
@@ -181,7 +181,7 @@ export default function Home() {
       <Dialog
         onClose={() => setIsFormOpen(false)}
         open={isFormOpen}
-        title={editingLink ? "Edit Link" : "Add New Link"}
+        title={editingLink ? "링크 수정" : "새 링크 추가"}
       >
         <LinkForm
           existingLinks={links}

@@ -9,7 +9,7 @@ const priorityRank: Record<LinkPriority, number> = {
 };
 
 export function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat("ko-KR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -18,9 +18,9 @@ export function formatDate(value: string) {
 
 export function getStatusLabel(status: LinkStatus) {
   const labels: Record<LinkStatus, string> = {
-    unread: "To Read",
-    reading: "Reading",
-    completed: "Completed",
+    unread: "읽을 예정",
+    reading: "읽는 중",
+    completed: "완료",
   };
 
   return labels[status];
@@ -28,9 +28,9 @@ export function getStatusLabel(status: LinkStatus) {
 
 export function getPriorityLabel(priority: LinkPriority) {
   const labels: Record<LinkPriority, string> = {
-    low: "Low",
-    medium: "Medium",
-    high: "High",
+    low: "낮음",
+    medium: "보통",
+    high: "높음",
   };
 
   return labels[priority];

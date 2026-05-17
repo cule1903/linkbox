@@ -12,9 +12,9 @@ type AppSidebarProps = {
 };
 
 const menuItems = [
-  { title: "Dashboard", icon: LayoutDashboard, page: "dashboard" as const },
-  { title: "All Links", icon: Bookmark, page: "links" as const },
-  { title: "Favorites", icon: Star, page: "favorites" as const },
+  { title: "대시보드", icon: LayoutDashboard, page: "dashboard" as const },
+  { title: "전체 링크", icon: Bookmark, page: "links" as const },
+  { title: "즐겨찾기", icon: Star, page: "favorites" as const },
 ];
 
 export function AppSidebar({
@@ -32,7 +32,7 @@ export function AppSidebar({
           </div>
           <div>
             <h1 className="text-lg font-semibold">LinkBox</h1>
-            <p className="text-xs text-muted-foreground">Link Organizer</p>
+            <p className="text-xs text-muted-foreground">링크 정리 도구</p>
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function AppSidebar({
         </div>
         <Button className="w-full justify-start" onClick={onLogout} variant="ghost">
           <LogOut className="h-4 w-4" />
-          Logout
+          로그아웃
         </Button>
       </div>
     </aside>

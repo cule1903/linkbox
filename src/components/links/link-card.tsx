@@ -42,7 +42,7 @@ export function LinkCard({
                 {link.title}
               </h3>
               <button
-                aria-label="Toggle favorite"
+                aria-label="즐겨찾기 전환"
                 className="text-slate-400 transition-colors hover:text-amber-500"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -108,7 +108,7 @@ export function LinkCard({
               ))}
               {link.tags.length > 3 && (
                 <span className="text-xs text-slate-500">
-                  +{link.tags.length - 3} more
+                  외 {link.tags.length - 3}개
                 </span>
               )}
             </div>
@@ -116,7 +116,7 @@ export function LinkCard({
 
           <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
             <Button
-              aria-label="Edit link"
+              aria-label="링크 수정"
               onClick={(event) => {
                 event.stopPropagation();
                 onEdit(link);
@@ -127,7 +127,7 @@ export function LinkCard({
               <Edit className="h-4 w-4" />
             </Button>
             <Button
-              aria-label="Delete link"
+              aria-label="링크 삭제"
               onClick={(event) => {
                 event.stopPropagation();
                 onDelete(link.id);
@@ -143,7 +143,7 @@ export function LinkCard({
 
         <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
           <span className="text-xs text-slate-500">
-            Added {formatDate(link.created_at)}
+            {formatDate(link.created_at)}에 추가됨
           </span>
         </div>
       </CardContent>

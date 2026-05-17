@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "LinkBox",
-  description: "A personal bookmark manager for saved links and study notes.",
+  description: "개발 링크와 학습 노트를 저장하고 정리하는 개인 링크 관리 도구입니다.",
 };
 
 export default function RootLayout({

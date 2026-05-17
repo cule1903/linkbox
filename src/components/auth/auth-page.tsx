@@ -36,7 +36,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
           </div>
           <h1 className="mb-2 text-3xl font-semibold">LinkBox</h1>
           <p className="text-muted-foreground">
-            Your personal link organizer for learning resources
+            개발 자료와 학습 링크를 정리하는 개인 링크 저장소
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             }`}
             onClick={() => setMode("login")}
           >
-            Login
+            로그인
           </button>
           <button
             className={`rounded-md px-3 py-2 text-sm ${
@@ -55,29 +55,29 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             }`}
             onClick={() => setMode("signup")}
           >
-            Sign Up
+            회원가입
           </button>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>
-              {mode === "login" ? "Welcome back" : "Create an account"}
+              {mode === "login" ? "다시 오신 것을 환영합니다" : "계정 만들기"}
             </CardTitle>
             <CardDescription>
               {mode === "login"
-                ? "Enter your credentials to access your links"
-                : "Get started with LinkBox in seconds"}
+                ? "이메일과 비밀번호로 저장한 링크에 접근하세요"
+                : "LinkBox를 시작하기 위한 계정을 만들어주세요"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleSubmit}>
               {mode === "signup" && (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium">Name</span>
+                  <span className="text-sm font-medium">이름</span>
                   <Input
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Your name"
+                    placeholder="이름을 입력하세요"
                     required
                     type="text"
                     value={name}
@@ -85,7 +85,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                 </label>
               )}
               <label className="block space-y-2">
-                <span className="text-sm font-medium">Email</span>
+                <span className="text-sm font-medium">이메일</span>
                 <Input
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
@@ -95,17 +95,17 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                 />
               </label>
               <label className="block space-y-2">
-                <span className="text-sm font-medium">Password</span>
+                <span className="text-sm font-medium">비밀번호</span>
                 <Input
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="password"
+                  placeholder="비밀번호"
                   required
                   type="password"
                   value={password}
                 />
               </label>
               <Button className="w-full" type="submit">
-                {mode === "login" ? "Login" : "Create Account"}
+                {mode === "login" ? "로그인" : "계정 만들기"}
               </Button>
             </form>
           </CardContent>

@@ -37,7 +37,7 @@ export function LinkDetailPage({
     <div className="mx-auto max-w-4xl space-y-6">
       <Button className="mb-4" onClick={onBack} variant="ghost">
         <ArrowLeft className="h-4 w-4" />
-        Back to Links
+        링크 목록으로 돌아가기
       </Button>
 
       <Card>
@@ -57,7 +57,7 @@ export function LinkDetailPage({
             </div>
 
             <button
-              aria-label="Toggle favorite"
+              aria-label="즐겨찾기 전환"
               className="ml-4 text-slate-400 transition-colors hover:text-amber-500"
               onClick={() => onToggleFavorite(link.id)}
             >
@@ -71,7 +71,7 @@ export function LinkDetailPage({
 
           {link.description && (
             <div className="mb-8">
-              <h2 className="mb-2 text-lg font-medium">Notes</h2>
+              <h2 className="mb-2 text-lg font-medium">메모</h2>
               <p className="leading-relaxed text-slate-700">
                 {link.description}
               </p>
@@ -80,10 +80,10 @@ export function LinkDetailPage({
 
           <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h3 className="mb-3 font-medium">Status & Priority</h3>
+              <h3 className="mb-3 font-medium">상태 및 우선순위</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-20 text-sm text-slate-600">Status:</span>
+                  <span className="w-20 text-sm text-slate-600">상태:</span>
                   <Badge
                     className={getStatusClassName(link.status)}
                     variant="outline"
@@ -92,7 +92,7 @@ export function LinkDetailPage({
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-20 text-sm text-slate-600">Priority:</span>
+                  <span className="w-20 text-sm text-slate-600">우선순위:</span>
                   <Badge
                     className={getPriorityClassName(link.priority)}
                     variant="outline"
@@ -105,7 +105,7 @@ export function LinkDetailPage({
 
             {link.category && (
               <div>
-                <h3 className="mb-3 font-medium">Category</h3>
+                <h3 className="mb-3 font-medium">카테고리</h3>
                 <Badge
                   className="border-purple-200 bg-purple-50 text-purple-700"
                   variant="outline"
@@ -118,7 +118,7 @@ export function LinkDetailPage({
 
           {link.tags.length > 0 && (
             <div className="mb-8">
-              <h3 className="mb-3 font-medium">Tags</h3>
+              <h3 className="mb-3 font-medium">태그</h3>
               <div className="flex flex-wrap gap-2">
                 {link.tags.map((tag) => (
                   <span
@@ -134,13 +134,13 @@ export function LinkDetailPage({
 
           <div className="mb-8 flex items-center gap-2 border-b border-border pb-8 text-sm text-slate-600">
             <Calendar className="h-4 w-4" />
-            <span>Added {formatDate(link.created_at)}</span>
+            <span>{formatDate(link.created_at)}에 추가됨</span>
           </div>
 
           <div className="flex gap-3">
             <Button onClick={() => onEdit(link)}>
               <Edit className="h-4 w-4" />
-              Edit Link
+              링크 수정
             </Button>
             <Button
               onClick={() => {
@@ -150,7 +150,7 @@ export function LinkDetailPage({
               variant="destructive"
             >
               <Trash2 className="h-4 w-4" />
-              Delete Link
+              링크 삭제
             </Button>
           </div>
         </CardContent>
