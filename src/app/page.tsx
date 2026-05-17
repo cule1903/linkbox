@@ -17,6 +17,7 @@ import {
   createLink,
   deleteLink,
   getLinkMutationErrorMessage,
+  getLinkSuccessMessage,
   listLinks,
   updateLink,
 } from "@/lib/links";
@@ -46,6 +47,7 @@ export default function Home() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isSessionChecking, setIsSessionChecking] = useState(Boolean(supabase));
   const [linksError, setLinksError] = useState<string | null>(null);
+  const [linksNotice, setLinksNotice] = useState<string | null>(null);
   const [isLinksLoading, setIsLinksLoading] = useState(false);
   const [isLinkSaving, setIsLinkSaving] = useState(false);
 
@@ -198,6 +200,7 @@ export default function Home() {
 
     setIsLinkSaving(true);
     setLinksError(null);
+    setLinksNotice(null);
 
     try {
       if (editingId) {
@@ -208,9 +211,11 @@ export default function Home() {
         setSelectedLink((current) =>
           current?.id === editingId ? updatedLink : current,
         );
+        setLinksNotice(getLinkSuccessMessage("update"));
       } else {
         const createdLink = await createLink(supabase, draft, userId);
         setLinks((current) => [createdLink, ...current]);
+        setLinksNotice(getLinkSuccessMessage("create"));
       }
 
       setIsFormOpen(false);
@@ -233,11 +238,14 @@ export default function Home() {
     }
 
     const previousLinks = links;
+    setLinksError(null);
+    setLinksNotice(null);
     setLinks((current) => current.filter((link) => link.id !== id));
     setSelectedLink((current) => (current?.id === id ? null : current));
 
     try {
       await deleteLink(supabase, id);
+      setLinksNotice(getLinkSuccessMessage("delete"));
     } catch (error) {
       setLinks(previousLinks);
       setLinksError(
@@ -266,12 +274,24 @@ export default function Home() {
       is_favorite: !target.is_favorite,
     };
 
-    const updatedLink = await updateLink(supabase, id, nextDraft);
+    setLinksError(null);
+    setLinksNotice(null);
 
-    setLinks((current) =>
-      current.map((link) => (link.id === id ? updatedLink : link)),
-    );
-    setSelectedLink((current) => (current?.id === id ? updatedLink : current));
+    try {
+      const updatedLink = await updateLink(supabase, id, nextDraft);
+
+      setLinks((current) =>
+        current.map((link) => (link.id === id ? updatedLink : link)),
+      );
+      setSelectedLink((current) => (current?.id === id ? updatedLink : current));
+      setLinksNotice(getLinkSuccessMessage("favorite"));
+    } catch (error) {
+      setLinksError(
+        error instanceof Error
+          ? error.message
+          : getLinkMutationErrorMessage(),
+      );
+    }
   }
 
   function handleViewLink(link: LinkItem) {
@@ -323,6 +343,7 @@ export default function Home() {
           {currentPage === "dashboard" && (
             <>
               {linksError && <PageError message={linksError} />}
+              {linksNotice && <PageNotice message={linksNotice} />}
               {isLinksLoading ? (
                 <PageLoading />
               ) : (
@@ -340,6 +361,7 @@ export default function Home() {
           {currentPage === "links" && (
             <>
               {linksError && <PageError message={linksError} />}
+              {linksNotice && <PageNotice message={linksNotice} />}
               {isLinksLoading ? (
                 <PageLoading />
               ) : (
@@ -358,6 +380,7 @@ export default function Home() {
           {currentPage === "favorites" && (
             <>
               {linksError && <PageError message={linksError} />}
+              {linksNotice && <PageNotice message={linksNotice} />}
               {isLinksLoading ? (
                 <PageLoading />
               ) : (
@@ -406,6 +429,14 @@ export default function Home() {
 function PageError({ message }: { message: string }) {
   return (
     <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      {message}
+    </div>
+  );
+}
+
+function PageNotice({ message }: { message: string }) {
+  return (
+    <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
       {message}
     </div>
   );

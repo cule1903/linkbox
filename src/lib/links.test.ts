@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   getLinkMutationErrorMessage,
+  getLinkSuccessMessage,
   linkDraftToInsert,
   linkRowToItem,
   shouldCommitTagInput,
@@ -105,4 +106,11 @@ test("shouldCommitTagInput ignores Enter while Korean IME is composing", () => {
     }),
     false,
   );
+});
+
+test("getLinkSuccessMessage returns Korean copy for link actions", () => {
+  assert.equal(getLinkSuccessMessage("create"), "링크를 저장했습니다.");
+  assert.equal(getLinkSuccessMessage("update"), "링크를 수정했습니다.");
+  assert.equal(getLinkSuccessMessage("delete"), "링크를 삭제했습니다.");
+  assert.equal(getLinkSuccessMessage("favorite"), "즐겨찾기를 변경했습니다.");
 });

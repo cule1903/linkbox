@@ -22,6 +22,8 @@ export type TagInputCommitCheck = {
   key: string;
 };
 
+export type LinkSuccessAction = "create" | "delete" | "favorite" | "update";
+
 type LinkInsert = Omit<LinkItem, "created_at" | "id" | "updated_at">;
 
 type LinkUpdate = LinkDraft & {
@@ -74,6 +76,17 @@ export function getLinkMutationErrorMessage(message?: string) {
   }
 
   return "링크 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
+export function getLinkSuccessMessage(action: LinkSuccessAction) {
+  const messages: Record<LinkSuccessAction, string> = {
+    create: "링크를 저장했습니다.",
+    update: "링크를 수정했습니다.",
+    delete: "링크를 삭제했습니다.",
+    favorite: "즐겨찾기를 변경했습니다.",
+  };
+
+  return messages[action];
 }
 
 export function shouldCommitTagInput({
