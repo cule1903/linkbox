@@ -64,9 +64,11 @@ export function filterLinks(
     status: string;
     priority: string;
     favoritesOnly: boolean;
+    tag?: string;
   },
 ) {
   const query = options.search.trim().toLowerCase();
+  const tagQuery = options.tag?.trim().toLowerCase() ?? "";
 
   return links.filter((link) => {
     const searchable = [
@@ -84,7 +86,9 @@ export function filterLinks(
       (!options.category || link.category === options.category) &&
       (!options.status || link.status === options.status) &&
       (!options.priority || link.priority === options.priority) &&
-      (!options.favoritesOnly || link.is_favorite)
+      (!options.favoritesOnly || link.is_favorite) &&
+      (!tagQuery ||
+        link.tags.some((tag) => tag.trim().toLowerCase() === tagQuery))
     );
   });
 }

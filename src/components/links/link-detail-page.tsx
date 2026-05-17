@@ -23,6 +23,7 @@ type LinkDetailPageProps = {
   onBack: () => void;
   onDelete: (id: string) => void;
   onEdit: (link: LinkItem) => void;
+  onTagClick?: (tag: string) => void;
   onToggleFavorite: (id: string) => void;
 };
 
@@ -31,6 +32,7 @@ export function LinkDetailPage({
   onBack,
   onDelete,
   onEdit,
+  onTagClick,
   onToggleFavorite,
 }: LinkDetailPageProps) {
   return (
@@ -121,12 +123,14 @@ export function LinkDetailPage({
               <h3 className="mb-3 font-medium">태그</h3>
               <div className="flex flex-wrap gap-2">
                 {link.tags.map((tag) => (
-                  <span
-                    className="inline-flex items-center rounded bg-slate-100 px-3 py-1 text-sm"
+                  <button
+                    className="inline-flex items-center rounded bg-slate-100 px-3 py-1 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700"
                     key={tag}
+                    onClick={() => onTagClick?.(tag)}
+                    type="button"
                   >
                     #{tag}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>

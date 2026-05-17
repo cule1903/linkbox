@@ -22,6 +22,7 @@ type LinkCardProps = {
   onClick: (link: LinkItem) => void;
   onDelete: (id: string) => void;
   onEdit: (link: LinkItem) => void;
+  onTagClick?: (tag: string) => void;
   onToggleFavorite: (id: string) => void;
 };
 
@@ -30,6 +31,7 @@ export function LinkCard({
   onClick,
   onDelete,
   onEdit,
+  onTagClick,
   onToggleFavorite,
 }: LinkCardProps) {
   return (
@@ -99,12 +101,17 @@ export function LinkCard({
 
             <div className="flex flex-wrap items-center gap-2">
               {link.tags.slice(0, 3).map((tag) => (
-                <span
-                  className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+                <button
+                  className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
                   key={tag}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTagClick?.(tag);
+                  }}
+                  type="button"
                 >
                   #{tag}
-                </span>
+                </button>
               ))}
               {link.tags.length > 3 && (
                 <span className="text-xs text-slate-500">

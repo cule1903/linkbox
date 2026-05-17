@@ -11,6 +11,7 @@ export default async function LinksRoute({ searchParams }: LinksRouteProps) {
     category: getSingleSearchParam(params.category),
     priority: getSingleSearchParam(params.priority),
     status: getSingleSearchParam(params.status),
+    tag: getSingleSearchParam(params.tag),
   };
 
   return <LinkBoxApp initialFilters={initialFilters} route="links" />;

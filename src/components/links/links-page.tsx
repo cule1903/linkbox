@@ -15,6 +15,7 @@ export type LinkPageFilters = {
   favoritesOnly?: boolean;
   priority?: string;
   status?: string;
+  tag?: string;
 };
 
 type LinksPageProps = {
@@ -44,6 +45,7 @@ export function LinksPage({
   const [category, setCategory] = useState(initialFilters?.category ?? "");
   const [status, setStatus] = useState(initialFilters?.status ?? "");
   const [priority, setPriority] = useState(initialFilters?.priority ?? "");
+  const [tag, setTag] = useState(initialFilters?.tag ?? "");
   const [favoritesOnly, setFavoritesOnly] = useState(
     initialFilters?.favoritesOnly ?? false,
   );
@@ -58,20 +60,22 @@ export function LinksPage({
           status,
           priority,
           favoritesOnly,
+          tag,
         }),
         sortBy,
       ),
-    [category, favoritesOnly, links, priority, search, sortBy, status],
+    [category, favoritesOnly, links, priority, search, sortBy, status, tag],
   );
 
   const activeFiltersCount =
-    [category, status, priority].filter(Boolean).length +
+    [category, status, priority, tag].filter(Boolean).length +
     (favoritesOnly ? 1 : 0);
 
   function clearFilters() {
     setCategory("");
     setStatus("");
     setPriority("");
+    setTag("");
     setFavoritesOnly(false);
   }
 
@@ -145,6 +149,12 @@ export function LinksPage({
           ))}
         </Select>
 
+        {tag && (
+          <Button onClick={() => setTag("")} size="sm" variant="outline">
+            #{tag}
+          </Button>
+        )}
+
         <Select
           className="w-40"
           onChange={(event) => setStatus(event.target.value)}
@@ -201,6 +211,7 @@ export function LinksPage({
               onDelete={onDeleteLink}
               onEdit={onEditLink}
               onToggleFavorite={onToggleFavorite}
+              onTagClick={setTag}
             />
           ))
         )}

@@ -12,6 +12,7 @@ type TagsPageProps = {
   linkCounts: Record<string, number>;
   onCreateTag: (name: string) => void;
   onDeleteTag: (tag: TagItem) => void;
+  onOpenTagLinks: (tag: TagItem) => void;
   onRenameTag: (tag: TagItem, name: string) => void;
   tags: TagItem[];
 };
@@ -21,6 +22,7 @@ export function TagsPage({
   linkCounts,
   onCreateTag,
   onDeleteTag,
+  onOpenTagLinks,
   onRenameTag,
   tags,
 }: TagsPageProps) {
@@ -129,12 +131,16 @@ export function TagsPage({
                           value={editingName}
                         />
                       ) : (
-                        <>
+                        <button
+                          className="block rounded-md px-2 py-1 text-left transition-colors hover:bg-slate-50"
+                          onClick={() => onOpenTagLinks(tag)}
+                          type="button"
+                        >
                           <p className="font-medium">#{tag.name}</p>
                           <p className="text-sm text-muted-foreground">
                             연결된 링크 {linkCounts[tag.name] ?? 0}개
                           </p>
-                        </>
+                        </button>
                       )}
                     </div>
 

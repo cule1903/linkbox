@@ -676,6 +676,14 @@ export function LinkBoxApp({
     router.push("/favorites");
   }
 
+  function handleOpenTagLinks(tag: TagItem) {
+    router.push(buildLinksHref({ tag: tag.name }));
+  }
+
+  function handleOpenTagName(tag: string) {
+    router.push(buildLinksHref({ tag }));
+  }
+
   function handleViewLink(link: LinkItem) {
     router.push(`/links/${link.id}`);
   }
@@ -777,6 +785,7 @@ export function LinkBoxApp({
                   linkCounts={tagLinkCounts}
                   onCreateTag={handleCreateTag}
                   onDeleteTag={handleDeleteTag}
+                  onOpenTagLinks={handleOpenTagLinks}
                   onRenameTag={handleRenameTag}
                   tags={tags}
                 />
@@ -789,6 +798,7 @@ export function LinkBoxApp({
                     onBack={() => router.back()}
                     onDelete={handleDeleteLink}
                     onEdit={handleEditLink}
+                    onTagClick={handleOpenTagName}
                     onToggleFavorite={handleToggleFavorite}
                   />
                 ) : (

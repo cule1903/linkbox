@@ -5,6 +5,7 @@ import { buildLinksHref, getCurrentPageFromRoute } from "./routes.ts";
 test("buildLinksHref creates stable URLs for dashboard card navigation", () => {
   assert.equal(buildLinksHref(), "/links");
   assert.equal(buildLinksHref({ status: "reading" }), "/links?status=reading");
+  assert.equal(buildLinksHref({ tag: "React" }), "/links?tag=react");
   assert.equal(
     buildLinksHref({ category: "레퍼런스", status: "completed" }),
     "/links?category=%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4&status=completed",

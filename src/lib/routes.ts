@@ -18,6 +18,10 @@ export function buildLinksHref(filters: LinkPageFilters = {}) {
     searchParams.set("status", filters.status);
   }
 
+  if (filters.tag) {
+    searchParams.set("tag", filters.tag.trim().toLowerCase());
+  }
+
   const queryString = searchParams.toString();
   return queryString ? `/links?${queryString}` : "/links";
 }
