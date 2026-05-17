@@ -13,7 +13,14 @@ import {
   getSupabaseBrowserClient,
   hasSupabaseConfig,
 } from "@/lib/auth";
-import { mockLinks, mockUser } from "@/lib/mock-links";
+import {
+  createLink,
+  deleteLink,
+  getLinkMutationErrorMessage,
+  listLinks,
+  updateLink,
+} from "@/lib/links";
+import { mockUser } from "@/lib/mock-links";
 import type { LinkDraft, LinkItem } from "@/types/link";
 
 const subscribeToHydration = () => () => {};
@@ -27,9 +34,10 @@ export default function Home() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const isSupabaseConfigured = hasSupabaseConfig();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState(mockUser.email);
   const [currentPage, setCurrentPage] = useState<AppPage>("dashboard");
-  const [links, setLinks] = useState<LinkItem[]>(mockLinks);
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<LinkItem | undefined>();
@@ -37,6 +45,9 @@ export default function Home() {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isSessionChecking, setIsSessionChecking] = useState(Boolean(supabase));
+  const [linksError, setLinksError] = useState<string | null>(null);
+  const [isLinksLoading, setIsLinksLoading] = useState(false);
+  const [isLinkSaving, setIsLinkSaving] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -44,8 +55,10 @@ export default function Home() {
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      const email = data.session?.user.email;
-      setIsAuthenticated(Boolean(email));
+      const user = data.session?.user;
+      const email = user?.email;
+      setIsAuthenticated(Boolean(user));
+      setUserId(user?.id ?? null);
       setUserEmail(email ?? mockUser.email);
       setIsSessionChecking(false);
     });
@@ -53,17 +66,54 @@ export default function Home() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const email = session?.user.email;
-      setIsAuthenticated(Boolean(email));
+      const user = session?.user;
+      const email = user?.email;
+      setIsAuthenticated(Boolean(user));
+      setUserId(user?.id ?? null);
       setUserEmail(email ?? mockUser.email);
       if (!email) {
         setCurrentPage("dashboard");
         setSelectedLink(null);
+        setLinks([]);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [supabase]);
+
+  useEffect(() => {
+    if (!supabase || !userId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadLinks() {
+      setIsLinksLoading(true);
+      setLinksError(null);
+
+      try {
+        const items = await listLinks(supabase!);
+        if (isMounted) {
+          setLinks(items);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLinksError(error instanceof Error ? error.message : "링크를 불러오지 못했습니다.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLinksLoading(false);
+        }
+      }
+    }
+
+    loadLinks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabase, userId]);
 
   async function handleLogin(email: string, password: string) {
     setAuthError(null);
@@ -123,9 +173,11 @@ export default function Home() {
     }
 
     setIsAuthenticated(false);
+    setUserId(null);
     setUserEmail(mockUser.email);
     setCurrentPage("dashboard");
     setSelectedLink(null);
+    setLinks([]);
   }
 
   function handleAddLink() {
@@ -138,65 +190,88 @@ export default function Home() {
     setIsFormOpen(true);
   }
 
-  function handleSaveLink(draft: LinkDraft, editingId?: string) {
-    const now = new Date().toISOString();
-
-    if (editingId) {
-      setLinks((current) =>
-        current.map((link) =>
-          link.id === editingId
-            ? {
-                ...link,
-                ...draft,
-                updated_at: now,
-              }
-            : link,
-        ),
-      );
-      setSelectedLink((current) =>
-        current?.id === editingId
-          ? {
-              ...current,
-              ...draft,
-              updated_at: now,
-            }
-          : current,
-      );
-    } else {
-      setLinks((current) => [
-        {
-          ...draft,
-          id: crypto.randomUUID(),
-          user_id: "mock-user",
-          created_at: now,
-          updated_at: now,
-        },
-        ...current,
-      ]);
+  async function handleSaveLink(draft: LinkDraft, editingId?: string) {
+    if (!supabase || !userId) {
+      setLinksError("로그인 후 링크를 저장할 수 있습니다.");
+      return;
     }
 
-    setIsFormOpen(false);
-    setEditingLink(undefined);
+    setIsLinkSaving(true);
+    setLinksError(null);
+
+    try {
+      if (editingId) {
+        const updatedLink = await updateLink(supabase, editingId, draft);
+        setLinks((current) =>
+          current.map((link) => (link.id === editingId ? updatedLink : link)),
+        );
+        setSelectedLink((current) =>
+          current?.id === editingId ? updatedLink : current,
+        );
+      } else {
+        const createdLink = await createLink(supabase, draft, userId);
+        setLinks((current) => [createdLink, ...current]);
+      }
+
+      setIsFormOpen(false);
+      setEditingLink(undefined);
+    } catch (error) {
+      setLinksError(
+        error instanceof Error
+          ? error.message
+          : getLinkMutationErrorMessage(),
+      );
+    } finally {
+      setIsLinkSaving(false);
+    }
   }
 
-  function handleDeleteLink(id: string) {
+  async function handleDeleteLink(id: string) {
+    if (!supabase) {
+      setLinksError("로그인 후 링크를 삭제할 수 있습니다.");
+      return;
+    }
+
+    const previousLinks = links;
     setLinks((current) => current.filter((link) => link.id !== id));
     setSelectedLink((current) => (current?.id === id ? null : current));
+
+    try {
+      await deleteLink(supabase, id);
+    } catch (error) {
+      setLinks(previousLinks);
+      setLinksError(
+        error instanceof Error
+          ? error.message
+          : "링크 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    }
   }
 
-  function handleToggleFavorite(id: string) {
+  async function handleToggleFavorite(id: string) {
+    const target = links.find((link) => link.id === id);
+
+    if (!supabase || !target) {
+      return;
+    }
+
+    const nextDraft: LinkDraft = {
+      title: target.title,
+      url: target.url,
+      description: target.description,
+      category: target.category,
+      tags: target.tags,
+      priority: target.priority,
+      status: target.status,
+      is_favorite: !target.is_favorite,
+    };
+
+    const updatedLink = await updateLink(supabase, id, nextDraft);
+
     setLinks((current) =>
-      current.map((link) =>
-        link.id === id
-          ? { ...link, is_favorite: !link.is_favorite }
-          : link,
-      ),
+      current.map((link) => (link.id === id ? updatedLink : link)),
     );
-    setSelectedLink((current) =>
-      current?.id === id
-        ? { ...current, is_favorite: !current.is_favorite }
-        : current,
-    );
+    setSelectedLink((current) => (current?.id === id ? updatedLink : current));
   }
 
   function handleViewLink(link: LinkItem) {
@@ -246,36 +321,57 @@ export default function Home() {
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-6 md:p-8">
           {currentPage === "dashboard" && (
-            <DashboardPage
-              links={links}
-              onDeleteLink={handleDeleteLink}
-              onEditLink={handleEditLink}
-              onToggleFavorite={handleToggleFavorite}
-              onViewLink={handleViewLink}
-            />
+            <>
+              {linksError && <PageError message={linksError} />}
+              {isLinksLoading ? (
+                <PageLoading />
+              ) : (
+                <DashboardPage
+                  links={links}
+                  onDeleteLink={handleDeleteLink}
+                  onEditLink={handleEditLink}
+                  onToggleFavorite={handleToggleFavorite}
+                  onViewLink={handleViewLink}
+                />
+              )}
+            </>
           )}
 
           {currentPage === "links" && (
-            <LinksPage
-              links={links}
-              onAddLink={handleAddLink}
-              onDeleteLink={handleDeleteLink}
-              onEditLink={handleEditLink}
-              onToggleFavorite={handleToggleFavorite}
-              onViewLink={handleViewLink}
-            />
+            <>
+              {linksError && <PageError message={linksError} />}
+              {isLinksLoading ? (
+                <PageLoading />
+              ) : (
+                <LinksPage
+                  links={links}
+                  onAddLink={handleAddLink}
+                  onDeleteLink={handleDeleteLink}
+                  onEditLink={handleEditLink}
+                  onToggleFavorite={handleToggleFavorite}
+                  onViewLink={handleViewLink}
+                />
+              )}
+            </>
           )}
 
           {currentPage === "favorites" && (
-            <LinksPage
-              links={favoriteLinks}
-              onAddLink={handleAddLink}
-              onDeleteLink={handleDeleteLink}
-              onEditLink={handleEditLink}
-              onToggleFavorite={handleToggleFavorite}
-              onViewLink={handleViewLink}
-              title="즐겨찾기"
-            />
+            <>
+              {linksError && <PageError message={linksError} />}
+              {isLinksLoading ? (
+                <PageLoading />
+              ) : (
+                <LinksPage
+                  links={favoriteLinks}
+                  onAddLink={handleAddLink}
+                  onDeleteLink={handleDeleteLink}
+                  onEditLink={handleEditLink}
+                  onToggleFavorite={handleToggleFavorite}
+                  onViewLink={handleViewLink}
+                  title="즐겨찾기"
+                />
+              )}
+            </>
           )}
 
           {currentPage === "detail" && selectedLink && (
@@ -299,9 +395,26 @@ export default function Home() {
           existingLinks={links}
           link={editingLink}
           onCancel={() => setIsFormOpen(false)}
+          isSaving={isLinkSaving}
           onSave={handleSaveLink}
         />
       </Dialog>
+    </div>
+  );
+}
+
+function PageError({ message }: { message: string }) {
+  return (
+    <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      {message}
+    </div>
+  );
+}
+
+function PageLoading() {
+  return (
+    <div className="rounded-lg bg-slate-50 p-8 text-center text-sm text-muted-foreground">
+      링크를 불러오는 중...
     </div>
   );
 }

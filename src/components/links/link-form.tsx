@@ -12,6 +12,7 @@ import type { LinkDraft, LinkItem, LinkPriority, LinkStatus } from "@/types/link
 
 type LinkFormProps = {
   existingLinks: LinkItem[];
+  isSaving?: boolean;
   link?: LinkItem;
   onCancel: () => void;
   onSave: (draft: LinkDraft, editingId?: string) => void;
@@ -19,6 +20,7 @@ type LinkFormProps = {
 
 export function LinkForm({
   existingLinks,
+  isSaving = false,
   link,
   onCancel,
   onSave,
@@ -224,8 +226,8 @@ export function LinkForm({
       </label>
 
       <div className="flex gap-3 pt-4">
-        <Button className="flex-1" disabled={duplicateUrl} type="submit">
-          {link ? "링크 수정" : "링크 저장"}
+        <Button className="flex-1" disabled={duplicateUrl || isSaving} type="submit">
+          {isSaving ? "저장 중..." : link ? "링크 수정" : "링크 저장"}
         </Button>
         <Button onClick={onCancel} type="button" variant="outline">
           취소
