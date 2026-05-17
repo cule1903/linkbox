@@ -17,10 +17,6 @@ export type CategoryInsert = {
   name: string;
 };
 
-export type CategoryUpdate = {
-  name: string;
-};
-
 export function categoryRowToItem(row: CategoryRow): CategoryItem {
   return row;
 }
@@ -35,12 +31,6 @@ export function categoryDraftToInsert(
 ): CategoryInsert {
   return {
     user_id: userId,
-    name: normalizeCategoryName(name),
-  };
-}
-
-export function categoryDraftToUpdate(name: string): CategoryUpdate {
-  return {
     name: normalizeCategoryName(name),
   };
 }
@@ -100,20 +90,15 @@ export async function createCategory(
   return categoryRowToItem(data as CategoryRow);
 }
 
-export async function updateCategory(
+export async function renameCategory(
   supabase: SupabaseClient,
   id: string,
   name: string,
 ) {
-  const { data, error } = await supabase
-    .from("categories")
-    .update({
-      ...categoryDraftToUpdate(name),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("rename_category", {
+    p_category_id: id,
+    p_name: normalizeCategoryName(name),
+  });
 
   if (error) {
     throw new Error(getCategoryMutationErrorMessage(error.message));

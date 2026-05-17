@@ -8,10 +8,6 @@ export type TagInsert = {
   name: string;
 };
 
-export type TagUpdate = {
-  name: string;
-};
-
 type LinkTagInsert = {
   link_id: string;
   tag_id: string;
@@ -29,12 +25,6 @@ export function normalizeTagName(name: string) {
 export function tagDraftToInsert(name: string, userId: string): TagInsert {
   return {
     user_id: userId,
-    name: normalizeTagName(name),
-  };
-}
-
-export function tagDraftToUpdate(name: string): TagUpdate {
-  return {
     name: normalizeTagName(name),
   };
 }
@@ -92,20 +82,15 @@ export async function createTag(
   return tagRowToItem(data as TagRow);
 }
 
-export async function updateTag(
+export async function renameTag(
   supabase: SupabaseClient,
   id: string,
   name: string,
 ) {
-  const { data, error } = await supabase
-    .from("tags")
-    .update({
-      ...tagDraftToUpdate(name),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("rename_tag", {
+    p_name: normalizeTagName(name),
+    p_tag_id: id,
+  });
 
   if (error) {
     throw new Error(getTagMutationErrorMessage(error.message));

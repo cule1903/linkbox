@@ -18,7 +18,7 @@ import {
   getCategoryMutationErrorMessage,
   getCategoryOptionNames,
   listCategories,
-  updateCategory,
+  renameCategory,
 } from "@/lib/categories";
 import {
   getAuthErrorMessage,
@@ -31,6 +31,7 @@ import {
   getLinkMutationErrorMessage,
   getLinkSuccessMessage,
   listLinks,
+  normalizeTags,
   updateLink,
 } from "@/lib/links";
 import { buildLinksHref, getCurrentPageFromRoute, type AppRoute } from "@/lib/routes";
@@ -40,8 +41,8 @@ import {
   getTagMutationErrorMessage,
   getTagOptionNames,
   listTags,
+  renameTag,
   syncLinkTags,
-  updateTag,
 } from "@/lib/tags";
 import { mockUser } from "@/lib/mock-links";
 import type { CategoryItem } from "@/types/category";
@@ -457,29 +458,12 @@ export function LinkBoxApp({
     }
 
     const previousCategories = categories;
-    const previousLinks = links;
     setIsCategorySaving(true);
     setLinksError(null);
     setLinksNotice(null);
 
     try {
-      const updatedCategory = await updateCategory(supabase, category.id, name);
-      const renamedLinks = links.filter((link) => link.category === category.name);
-
-      await Promise.all(
-        renamedLinks.map((link) =>
-          updateLink(supabase, link.id, {
-            title: link.title,
-            url: link.url,
-            description: link.description,
-            category: updatedCategory.name,
-            tags: link.tags,
-            priority: link.priority,
-            status: link.status,
-            is_favorite: link.is_favorite,
-          }),
-        ),
-      );
+      const updatedCategory = await renameCategory(supabase, category.id, name);
 
       setCategories((current) =>
         current
@@ -496,7 +480,6 @@ export function LinkBoxApp({
       setLinksNotice("카테고리 이름을 수정했습니다.");
     } catch (error) {
       setCategories(previousCategories);
-      setLinks(previousLinks);
       setLinksError(
         error instanceof Error
           ? error.message
@@ -570,45 +553,13 @@ export function LinkBoxApp({
 
     const previousTags = tags;
     const previousLinks = links;
-    const normalizedName = name.trim().toLowerCase();
+    const oldTagName = tag.name.trim().toLowerCase();
     setIsTagSaving(true);
     setLinksError(null);
     setLinksNotice(null);
 
     try {
-      const updatedTag = await updateTag(supabase, tag.id, normalizedName);
-      const renamedLinks = links.filter((link) =>
-        link.tags.some((tagName) => tagName.trim().toLowerCase() === tag.name),
-      );
-
-      const updatedLinks = await Promise.all(
-        renamedLinks.map((link) =>
-          updateLink(supabase, link.id, {
-            title: link.title,
-            url: link.url,
-            description: link.description,
-            category: link.category,
-            tags: Array.from(
-              new Set(
-                link.tags.map((tagName) =>
-                  tagName.trim().toLowerCase() === tag.name
-                    ? updatedTag.name
-                    : tagName,
-                ),
-              ),
-            ),
-            priority: link.priority,
-            status: link.status,
-            is_favorite: link.is_favorite,
-          }),
-        ),
-      );
-
-      await Promise.all(
-        updatedLinks.map((link) =>
-          syncLinkTags(supabase, link.id, link.tags, link.user_id),
-        ),
-      );
+      const updatedTag = await renameTag(supabase, tag.id, name);
 
       setTags((current) =>
         current
@@ -616,9 +567,16 @@ export function LinkBoxApp({
           .sort(sortTags),
       );
       setLinks((current) =>
-        current.map(
-          (link) => updatedLinks.find((updated) => updated.id === link.id) ?? link,
-        ),
+        current.map((link) => ({
+          ...link,
+          tags: normalizeTags(
+            link.tags.map((tagName) =>
+              tagName.trim().toLowerCase() === oldTagName
+                ? updatedTag.name
+                : tagName,
+            ),
+          ),
+        })),
       );
       setLinksNotice("태그 이름을 수정했습니다.");
     } catch (error) {

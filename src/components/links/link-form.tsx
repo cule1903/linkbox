@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { hasDuplicateUrl } from "@/lib/link-utils";
-import { shouldCommitTagInput } from "@/lib/links";
+import { normalizeTags, shouldCommitTagInput } from "@/lib/links";
 import type { LinkDraft, LinkItem, LinkPriority, LinkStatus } from "@/types/link";
 
 type LinkFormProps = {
@@ -58,7 +58,7 @@ export function LinkForm({
         ...formData,
         category: formData.category || null,
         description: formData.description || null,
-        tags: formData.tags.map((tag) => tag.trim()).filter(Boolean),
+        tags: normalizeTags(formData.tags),
       },
       link?.id,
     );
@@ -76,14 +76,10 @@ export function LinkForm({
     }
 
     event.preventDefault();
-    const nextTag = tagInput.trim();
-
-    if (!formData.tags.includes(nextTag)) {
-      setFormData((current) => ({
-        ...current,
-        tags: [...current.tags, nextTag],
-      }));
-    }
+    setFormData((current) => ({
+      ...current,
+      tags: normalizeTags([...current.tags, tagInput]),
+    }));
 
     setTagInput("");
   }

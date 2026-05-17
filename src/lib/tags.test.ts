@@ -4,8 +4,8 @@ import {
   getTagMutationErrorMessage,
   getTagOptionNames,
   normalizeTagName,
+  renameTag,
   tagDraftToInsert,
-  tagDraftToUpdate,
   tagRowToItem,
 } from "./tags.ts";
 
@@ -34,9 +34,6 @@ test("tag helpers trim, lowercase, dedupe, and attach current user", () => {
     user_id: "user-id",
     name: "typescript",
   });
-  assert.deepEqual(tagDraftToUpdate("  NextJS  "), {
-    name: "nextjs",
-  });
   assert.deepEqual(getTagOptionNames([], [" React ", "react", "supabase"]), [
     "react",
     "supabase",
@@ -52,4 +49,42 @@ test("tag errors use Korean messages for duplicate labels", () => {
     getTagMutationErrorMessage("unknown"),
     "태그 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
   );
+});
+
+test("renameTag uses the transactional Supabase RPC", async () => {
+  const calls: Array<{ args: unknown; name: string }> = [];
+  const supabase = {
+    rpc(name: string, args: unknown) {
+      calls.push({ name, args });
+
+      return {
+        data: {
+          id: "tag-id",
+          user_id: "user-id",
+          name: "react",
+          created_at: "2026-05-17T00:00:00Z",
+          updated_at: "2026-05-17T00:00:00Z",
+        },
+        error: null,
+      };
+    },
+  };
+
+  const tag = await renameTag(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supabase as any,
+    "tag-id",
+    "  React  ",
+  );
+
+  assert.deepEqual(calls, [
+    {
+      name: "rename_tag",
+      args: {
+        p_name: "react",
+        p_tag_id: "tag-id",
+      },
+    },
+  ]);
+  assert.equal(tag.name, "react");
 });

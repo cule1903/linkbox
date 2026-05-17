@@ -83,7 +83,7 @@ Planned source structure:
 - `src/components/dashboard/`: dashboard summary and recent links
 - `src/components/ui/`: reusable UI primitives adapted from the Figma export when needed
 - `src/lib/links.ts`: link filtering, sorting, validation, and mapping helpers
-- `src/lib/supabase.ts`: Supabase client
+- `src/lib/auth.ts`: Supabase client configuration checks and browser client factory
 - `src/types/link.ts`: shared LinkBox types
 
 The Figma export uses Vite stateful navigation. The MVP can start with client-side state for the static UI, then replace mock operations with Supabase calls. If route-level URLs become necessary later, the app can split into `/login`, `/dashboard`, `/links`, and `/links/[id]`.

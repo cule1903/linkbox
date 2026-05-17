@@ -59,6 +59,7 @@ Supabase SQL Editor에서 아래 마이그레이션을 순서대로 실행합니
 2. `supabase/migrations/20260517001000_grant_links_permissions.sql`
 3. `supabase/migrations/20260517002000_create_categories.sql`
 4. `supabase/migrations/20260517003000_create_tags.sql`
+5. `supabase/migrations/20260517004000_create_rename_rpcs.sql`
 
 생성되는 주요 테이블:
 
@@ -83,6 +84,32 @@ npm run lint
 npm run build
 ```
 
+## 배포 전 QA 체크리스트
+
+Vercel 배포 전 Project Settings → Environment Variables에 아래 값을 추가합니다.
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Supabase에서 확인할 항목:
+
+- `links`, `categories`, `tags`, `link_tags` 테이블이 생성되어 있는지 확인
+- Database → Functions에서 `rename_category`, `rename_tag` 함수가 있는지 확인
+- Authentication → Providers → Email의 이메일 인증 설정을 배포 정책에 맞게 조정
+- 개발 중 생성한 QA 계정이 남아 있으면 Authentication → Users에서 삭제
+
+수동 QA 시나리오:
+
+1. 새 계정으로 회원가입하고 로그인합니다.
+2. 링크를 추가하고 제목, URL, 메모, 카테고리, 태그, 읽기 상태, 우선순위가 저장되는지 확인합니다.
+3. 같은 URL을 다시 저장할 때 중복 URL 메시지가 나오는지 확인합니다.
+4. 링크 검색, 카테고리 필터, 상태 필터, 우선순위 필터, 태그 필터가 동작하는지 확인합니다.
+5. 즐겨찾기 토글과 `/favorites` 페이지가 동작하는지 확인합니다.
+6. 카테고리 이름을 변경했을 때 기존 링크의 카테고리도 같이 바뀌는지 확인합니다.
+7. 태그 이름을 변경했을 때 기존 링크의 태그도 같이 바뀌는지 확인합니다.
+8. 링크 상세 페이지, 브라우저 뒤로가기, 사이드바 이동이 자연스럽게 동작하는지 확인합니다.
+9. 로그아웃 후 다른 계정으로 로그인했을 때 이전 계정의 데이터가 보이지 않는지 확인합니다.
+
 ## 현재 구현 상태
 
-MVP 핵심 기능과 카테고리/태그 관리, URL 기반 라우팅이 구현되어 있습니다. 남은 작업은 배포 설정, 최종 QA, 제출용 설명 보강입니다.
+MVP 핵심 기능, Supabase Auth/Database 연동, 카테고리/태그 관리, URL 기반 라우팅, 태그 정규화, 카테고리/태그 rename RPC가 구현되어 있습니다. 남은 작업은 Vercel 배포와 배포 URL 기준 최종 수동 QA입니다.

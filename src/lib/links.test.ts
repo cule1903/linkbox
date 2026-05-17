@@ -4,6 +4,7 @@ import {
   getLinkMutationErrorMessage,
   getLinkSuccessMessage,
   linkDraftToInsert,
+  linkDraftToUpdate,
   linkRowToItem,
   shouldCommitTagInput,
 } from "./links.ts";
@@ -41,6 +42,26 @@ test("linkRowToItem keeps nullable fields and array tags stable", () => {
   );
 });
 
+test("linkRowToItem normalizes existing row tags", () => {
+  assert.deepEqual(
+    linkRowToItem({
+      id: "link-id",
+      user_id: "user-id",
+      title: "React 문서",
+      url: "https://react.dev",
+      description: null,
+      category: null,
+      tags: [" React ", "react", "SUPABASE", " supabase "],
+      priority: "high",
+      status: "unread",
+      is_favorite: false,
+      created_at: "2026-05-17T00:00:00Z",
+      updated_at: "2026-05-17T00:00:00Z",
+    }).tags,
+    ["react", "supabase"],
+  );
+});
+
 test("linkDraftToInsert trims tags and attaches the current user id", () => {
   assert.deepEqual(
     linkDraftToInsert(
@@ -68,6 +89,25 @@ test("linkDraftToInsert trims tags and attaches the current user id", () => {
       is_favorite: true,
     },
   );
+});
+
+test("link draft helpers normalize tags consistently", () => {
+  const draft = {
+    title: "React 문서",
+    url: "https://react.dev",
+    description: null,
+    category: null,
+    tags: [" React ", "react", "SUPABASE", " supabase ", ""],
+    priority: "medium" as const,
+    status: "reading" as const,
+    is_favorite: false,
+  };
+
+  assert.deepEqual(linkDraftToInsert(draft, "user-id").tags, [
+    "react",
+    "supabase",
+  ]);
+  assert.deepEqual(linkDraftToUpdate(draft).tags, ["react", "supabase"]);
 });
 
 test("getLinkMutationErrorMessage maps duplicate URL errors to Korean copy", () => {

@@ -33,7 +33,7 @@ type LinkUpdate = LinkDraft & {
 export function linkRowToItem(row: LinkRow): LinkItem {
   return {
     ...row,
-    tags: row.tags ?? [],
+    tags: normalizeTags(row.tags ?? []),
   };
 }
 
@@ -155,6 +155,10 @@ export async function deleteLink(supabase: SupabaseClient, id: string) {
   }
 }
 
-function normalizeTags(tags: string[]) {
-  return tags.map((tag) => tag.trim()).filter(Boolean);
+export function normalizeTags(tags: string[]) {
+  const normalizedTags = tags
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+
+  return Array.from(new Set(normalizedTags));
 }

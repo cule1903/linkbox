@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   categoryDraftToInsert,
-  categoryDraftToUpdate,
   categoryRowToItem,
   getCategoryMutationErrorMessage,
   getCategoryOptionNames,
   normalizeCategoryName,
+  renameCategory,
 } from "./categories.ts";
 
 test("categoryRowToItem maps a database row without changing labels", () => {
@@ -33,9 +33,6 @@ test("category draft helpers trim names and attach current user", () => {
   assert.deepEqual(categoryDraftToInsert("  문서  ", "user-id"), {
     user_id: "user-id",
     name: "문서",
-  });
-  assert.deepEqual(categoryDraftToUpdate("  블로그  "), {
-    name: "블로그",
   });
 });
 
@@ -72,4 +69,42 @@ test("getCategoryOptionNames combines saved and default category names", () => {
     "영상",
     "강의",
   ]);
+});
+
+test("renameCategory uses the transactional Supabase RPC", async () => {
+  const calls: Array<{ args: unknown; name: string }> = [];
+  const supabase = {
+    rpc(name: string, args: unknown) {
+      calls.push({ name, args });
+
+      return {
+        data: {
+          id: "category-id",
+          user_id: "user-id",
+          name: "레퍼런스",
+          created_at: "2026-05-17T00:00:00Z",
+          updated_at: "2026-05-17T00:00:00Z",
+        },
+        error: null,
+      };
+    },
+  };
+
+  const category = await renameCategory(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supabase as any,
+    "category-id",
+    "  레퍼런스  ",
+  );
+
+  assert.deepEqual(calls, [
+    {
+      name: "rename_category",
+      args: {
+        p_category_id: "category-id",
+        p_name: "레퍼런스",
+      },
+    },
+  ]);
+  assert.equal(category.name, "레퍼런스");
 });
