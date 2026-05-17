@@ -2,7 +2,7 @@
 
 ## Current Stage
 
-URL-based app routing, Supabase-backed category management, and normalized tag tables are implemented. Supabase remote table access and authenticated CRUD for links, categories, tags, link-tag relations, and rename RPCs have been verified. Tag storage now normalizes saved and loaded link tags consistently. Legacy eager Supabase client code has been removed. Deployment QA checklist is documented. Next stage: deploy to Vercel and run the final manual QA checklist on the deployed URL.
+URL-based app routing, Supabase-backed category management, and normalized tag tables are implemented. Supabase remote table access and authenticated CRUD for links, categories, tags, link-tag relations, and rename RPCs have been verified. Tag storage now normalizes saved and loaded link tags consistently. Legacy eager Supabase client code has been removed. Deployment QA checklist is documented. Vercel deployment URL is recorded. Next stage: run the final manual QA checklist on the deployed URL and add screenshots.
 
 ## Project Summary
 
@@ -120,3 +120,6 @@ Prepare Vercel deployment settings and final QA checklist.
 - Confirmed remote `rename_category` updates linked `links.category` values and remote `rename_tag` updates linked `links.tags` arrays.
 - Added README deployment QA guidance for Vercel environment variables, Supabase checks, and manual end-to-end scenarios.
 - Verified local routes `/`, `/dashboard`, `/links?status=reading&tag=react`, `/favorites`, `/categories`, and `/tags` return HTTP 200 from the running Next.js dev server.
+- Added deployed Vercel URL `https://linkbox-five.vercel.app/` to README.
+- Rewrote README into a full project proposal and implementation summary format covering planning background, core features, architecture, DB design, routes, decisions, local setup, and verification.
+- Removed operational Supabase setup and Vercel deployment checklist sections from README to keep it focused as a project explanation document.
