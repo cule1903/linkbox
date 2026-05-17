@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { hasDuplicateUrl } from "@/lib/link-utils";
+import { shouldCommitTagInput } from "@/lib/links";
 import { mockCategories } from "@/lib/mock-links";
 import type { LinkDraft, LinkItem, LinkPriority, LinkStatus } from "@/types/link";
 
@@ -61,7 +62,13 @@ export function LinkForm({
   }
 
   function handleAddTag(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== "Enter" || !tagInput.trim()) {
+    if (
+      !shouldCommitTagInput({
+        input: tagInput,
+        isComposing: event.nativeEvent.isComposing,
+        key: event.key,
+      })
+    ) {
       return;
     }
 

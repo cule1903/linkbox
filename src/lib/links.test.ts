@@ -4,6 +4,7 @@ import {
   getLinkMutationErrorMessage,
   linkDraftToInsert,
   linkRowToItem,
+  shouldCommitTagInput,
 } from "./links.ts";
 
 test("linkRowToItem keeps nullable fields and array tags stable", () => {
@@ -76,5 +77,32 @@ test("getLinkMutationErrorMessage maps duplicate URL errors to Korean copy", () 
   assert.equal(
     getLinkMutationErrorMessage("some unknown database error"),
     "링크 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+  );
+});
+
+test("shouldCommitTagInput ignores Enter while Korean IME is composing", () => {
+  assert.equal(
+    shouldCommitTagInput({
+      input: "리액",
+      isComposing: true,
+      key: "Enter",
+    }),
+    false,
+  );
+  assert.equal(
+    shouldCommitTagInput({
+      input: "리액트",
+      isComposing: false,
+      key: "Enter",
+    }),
+    true,
+  );
+  assert.equal(
+    shouldCommitTagInput({
+      input: "   ",
+      isComposing: false,
+      key: "Enter",
+    }),
+    false,
   );
 });

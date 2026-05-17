@@ -16,6 +16,12 @@ export type LinkRow = {
   updated_at: string;
 };
 
+export type TagInputCommitCheck = {
+  input: string;
+  isComposing: boolean;
+  key: string;
+};
+
 type LinkInsert = Omit<LinkItem, "created_at" | "id" | "updated_at">;
 
 type LinkUpdate = LinkDraft & {
@@ -68,6 +74,14 @@ export function getLinkMutationErrorMessage(message?: string) {
   }
 
   return "링크 저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
+export function shouldCommitTagInput({
+  input,
+  isComposing,
+  key,
+}: TagInputCommitCheck) {
+  return key === "Enter" && !isComposing && Boolean(input.trim());
 }
 
 export async function listLinks(supabase: SupabaseClient) {
