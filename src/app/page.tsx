@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AuthPage } from "@/components/auth/auth-page";
 import { DashboardPage } from "@/components/dashboard/dashboard-page";
 import { AppPage, AppSidebar } from "@/components/layout/app-sidebar";
@@ -8,10 +8,17 @@ import { LinkDetailPage } from "@/components/links/link-detail-page";
 import { LinkForm } from "@/components/links/link-form";
 import { LinksPage } from "@/components/links/links-page";
 import { Dialog } from "@/components/ui/dialog";
+import {
+  getAuthErrorMessage,
+  getSupabaseBrowserClient,
+  hasSupabaseConfig,
+} from "@/lib/auth";
 import { mockLinks, mockUser } from "@/lib/mock-links";
 import type { LinkDraft, LinkItem } from "@/types/link";
 
 export default function Home() {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const isSupabaseConfigured = hasSupabaseConfig();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState(mockUser.email);
   const [currentPage, setCurrentPage] = useState<AppPage>("dashboard");
@@ -19,14 +26,95 @@ export default function Home() {
   const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<LinkItem | undefined>();
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isSessionChecking, setIsSessionChecking] = useState(Boolean(supabase));
 
-  function handleLogin(email: string) {
-    setUserEmail(email);
-    setIsAuthenticated(true);
-    setCurrentPage("dashboard");
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      const email = data.session?.user.email;
+      setIsAuthenticated(Boolean(email));
+      setUserEmail(email ?? mockUser.email);
+      setIsSessionChecking(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const email = session?.user.email;
+      setIsAuthenticated(Boolean(email));
+      setUserEmail(email ?? mockUser.email);
+      if (!email) {
+        setCurrentPage("dashboard");
+        setSelectedLink(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  async function handleLogin(email: string, password: string) {
+    setAuthError(null);
+    setAuthNotice(null);
+
+    if (!supabase) {
+      setAuthError("Supabase 설정을 먼저 완료해 주세요.");
+      return;
+    }
+
+    setIsAuthLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setIsAuthLoading(false);
+
+    if (error) {
+      setAuthError(getAuthErrorMessage(error.message));
+    }
   }
 
-  function handleLogout() {
+  async function handleSignup(name: string, email: string, password: string) {
+    setAuthError(null);
+    setAuthNotice(null);
+
+    if (!supabase) {
+      setAuthError("Supabase 설정을 먼저 완료해 주세요.");
+      return;
+    }
+
+    setIsAuthLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
+    setIsAuthLoading(false);
+
+    if (error) {
+      setAuthError(getAuthErrorMessage(error.message));
+      return;
+    }
+
+    if (!data.session) {
+      setAuthNotice("가입 확인 메일을 보냈습니다. 이메일 인증 후 로그인해 주세요.");
+    }
+  }
+
+  async function handleLogout() {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+
     setIsAuthenticated(false);
     setUserEmail(mockUser.email);
     setCurrentPage("dashboard");
@@ -116,8 +204,25 @@ export default function Home() {
     }
   }
 
+  if (isSessionChecking) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <p className="text-sm text-muted-foreground">로그인 상태를 확인하는 중...</p>
+      </main>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <AuthPage onLogin={handleLogin} />;
+    return (
+      <AuthPage
+        authError={authError}
+        authNotice={authNotice}
+        isConfigured={isSupabaseConfigured}
+        isLoading={isAuthLoading}
+        onLogin={handleLogin}
+        onSignup={handleSignup}
+      />
+    );
   }
 
   const favoriteLinks = links.filter((link) => link.is_favorite);

@@ -13,18 +13,34 @@ import {
 import { Input } from "@/components/ui/input";
 
 type AuthPageProps = {
-  onLogin: (email: string) => void;
+  authError: string | null;
+  authNotice: string | null;
+  isConfigured: boolean;
+  isLoading: boolean;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onSignup: (name: string, email: string, password: string) => Promise<void>;
 };
 
-export function AuthPage({ onLogin }: AuthPageProps) {
+export function AuthPage({
+  authError,
+  authNotice,
+  isConfigured,
+  isLoading,
+  onLogin,
+  onSignup,
+}: AuthPageProps) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onLogin(email);
+    if (mode === "login") {
+      await onLogin(email, password);
+    } else {
+      await onSignup(name, email, password);
+    }
   }
 
   return (
@@ -71,6 +87,23 @@ export function AuthPage({ onLogin }: AuthPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!isConfigured && (
+              <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                Supabase 환경 변수가 설정되지 않았습니다. `.env.local`에
+                `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_ANON_KEY`를
+                추가한 뒤 다시 실행해 주세요.
+              </div>
+            )}
+            {authError && (
+              <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {authError}
+              </div>
+            )}
+            {authNotice && (
+              <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+                {authNotice}
+              </div>
+            )}
             <form className="space-y-4" onSubmit={handleSubmit}>
               {mode === "signup" && (
                 <label className="block space-y-2">
@@ -104,8 +137,16 @@ export function AuthPage({ onLogin }: AuthPageProps) {
                   value={password}
                 />
               </label>
-              <Button className="w-full" type="submit">
-                {mode === "login" ? "로그인" : "계정 만들기"}
+              <Button
+                className="w-full"
+                disabled={!isConfigured || isLoading}
+                type="submit"
+              >
+                {isLoading
+                  ? "처리 중..."
+                  : mode === "login"
+                    ? "로그인"
+                    : "계정 만들기"}
               </Button>
             </form>
           </CardContent>
