@@ -16,3 +16,8 @@ export type LinkItem = {
   created_at: string;
   updated_at: string;
 };
+
+export type LinkDraft = Omit<
+  LinkItem,
+  "id" | "user_id" | "created_at" | "updated_at"
+>;

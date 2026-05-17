@@ -1,36 +1,195 @@
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto flex max-w-5xl flex-col gap-8">
-        <div>
-          <p className="text-sm font-medium text-blue-700">LinkBox</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-            개인 링크 저장소 프로젝트 시작
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            Next.js, TypeScript, Tailwind CSS, Supabase를 기반으로 개발 자료와
-            참고 링크를 저장하고 정리하는 웹 애플리케이션입니다.
-          </p>
-        </div>
+"use client";
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            ["기획", "링크 저장, 검색, 필터, 즐겨찾기 중심 MVP"],
-            ["개발", "Figma UI 기반 화면 구현과 Supabase 연동"],
-            ["배포", "GitHub 저장소 연결 후 Vercel 배포"],
-          ].map(([title, description]) => (
-            <div
-              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
-              key={title}
-            >
-              <h2 className="text-lg font-semibold">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {description}
-              </p>
-            </div>
-          ))}
+import { useState } from "react";
+import { AuthPage } from "@/components/auth/auth-page";
+import { DashboardPage } from "@/components/dashboard/dashboard-page";
+import { AppPage, AppSidebar } from "@/components/layout/app-sidebar";
+import { LinkDetailPage } from "@/components/links/link-detail-page";
+import { LinkForm } from "@/components/links/link-form";
+import { LinksPage } from "@/components/links/links-page";
+import { Dialog } from "@/components/ui/dialog";
+import { mockLinks, mockUser } from "@/lib/mock-links";
+import type { LinkDraft, LinkItem } from "@/types/link";
+
+export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState(mockUser.email);
+  const [currentPage, setCurrentPage] = useState<AppPage>("dashboard");
+  const [links, setLinks] = useState<LinkItem[]>(mockLinks);
+  const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<LinkItem | undefined>();
+
+  function handleLogin(email: string) {
+    setUserEmail(email);
+    setIsAuthenticated(true);
+    setCurrentPage("dashboard");
+  }
+
+  function handleLogout() {
+    setIsAuthenticated(false);
+    setUserEmail(mockUser.email);
+    setCurrentPage("dashboard");
+    setSelectedLink(null);
+  }
+
+  function handleAddLink() {
+    setEditingLink(undefined);
+    setIsFormOpen(true);
+  }
+
+  function handleEditLink(link: LinkItem) {
+    setEditingLink(link);
+    setIsFormOpen(true);
+  }
+
+  function handleSaveLink(draft: LinkDraft, editingId?: string) {
+    const now = new Date().toISOString();
+
+    if (editingId) {
+      setLinks((current) =>
+        current.map((link) =>
+          link.id === editingId
+            ? {
+                ...link,
+                ...draft,
+                updated_at: now,
+              }
+            : link,
+        ),
+      );
+      setSelectedLink((current) =>
+        current?.id === editingId
+          ? {
+              ...current,
+              ...draft,
+              updated_at: now,
+            }
+          : current,
+      );
+    } else {
+      setLinks((current) => [
+        {
+          ...draft,
+          id: crypto.randomUUID(),
+          user_id: "mock-user",
+          created_at: now,
+          updated_at: now,
+        },
+        ...current,
+      ]);
+    }
+
+    setIsFormOpen(false);
+    setEditingLink(undefined);
+  }
+
+  function handleDeleteLink(id: string) {
+    setLinks((current) => current.filter((link) => link.id !== id));
+    setSelectedLink((current) => (current?.id === id ? null : current));
+  }
+
+  function handleToggleFavorite(id: string) {
+    setLinks((current) =>
+      current.map((link) =>
+        link.id === id
+          ? { ...link, is_favorite: !link.is_favorite }
+          : link,
+      ),
+    );
+    setSelectedLink((current) =>
+      current?.id === id
+        ? { ...current, is_favorite: !current.is_favorite }
+        : current,
+    );
+  }
+
+  function handleViewLink(link: LinkItem) {
+    setSelectedLink(link);
+    setCurrentPage("detail");
+  }
+
+  function handleNavigate(page: AppPage) {
+    setCurrentPage(page);
+    if (page !== "detail") {
+      setSelectedLink(null);
+    }
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage onLogin={handleLogin} />;
+  }
+
+  const favoriteLinks = links.filter((link) => link.is_favorite);
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
+      <AppSidebar
+        currentPage={currentPage}
+        onLogout={handleLogout}
+        onNavigate={handleNavigate}
+        userEmail={userEmail}
+      />
+
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl p-6 md:p-8">
+          {currentPage === "dashboard" && (
+            <DashboardPage
+              links={links}
+              onDeleteLink={handleDeleteLink}
+              onEditLink={handleEditLink}
+              onToggleFavorite={handleToggleFavorite}
+              onViewLink={handleViewLink}
+            />
+          )}
+
+          {currentPage === "links" && (
+            <LinksPage
+              links={links}
+              onAddLink={handleAddLink}
+              onDeleteLink={handleDeleteLink}
+              onEditLink={handleEditLink}
+              onToggleFavorite={handleToggleFavorite}
+              onViewLink={handleViewLink}
+            />
+          )}
+
+          {currentPage === "favorites" && (
+            <LinksPage
+              links={favoriteLinks}
+              onAddLink={handleAddLink}
+              onDeleteLink={handleDeleteLink}
+              onEditLink={handleEditLink}
+              onToggleFavorite={handleToggleFavorite}
+              onViewLink={handleViewLink}
+              title="Favorites"
+            />
+          )}
+
+          {currentPage === "detail" && selectedLink && (
+            <LinkDetailPage
+              link={selectedLink}
+              onBack={() => handleNavigate("links")}
+              onDelete={handleDeleteLink}
+              onEdit={handleEditLink}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          )}
         </div>
-      </section>
-    </main>
+      </main>
+
+      <Dialog
+        onClose={() => setIsFormOpen(false)}
+        open={isFormOpen}
+        title={editingLink ? "Edit Link" : "Add New Link"}
+      >
+        <LinkForm
+          existingLinks={links}
+          link={editingLink}
+          onCancel={() => setIsFormOpen(false)}
+          onSave={handleSaveLink}
+        />
+      </Dialog>
+    </div>
   );
 }
