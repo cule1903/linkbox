@@ -17,6 +17,7 @@ type LinkFormProps = {
   link?: LinkItem;
   onCancel: () => void;
   onSave: (draft: LinkDraft, editingId?: string) => void;
+  tagOptions?: string[];
 };
 
 export function LinkForm({
@@ -26,6 +27,7 @@ export function LinkForm({
   link,
   onCancel,
   onSave,
+  tagOptions = [],
 }: LinkFormProps) {
   const [formData, setFormData] = useState<LinkDraft>({
     title: link?.title || "",
@@ -194,11 +196,19 @@ export function LinkForm({
         <label className="block space-y-2">
           <span className="text-sm font-medium">태그</span>
           <Input
+            list="linkbox-tag-options"
             onChange={(event) => setTagInput(event.target.value)}
             onKeyDown={handleAddTag}
             placeholder="태그를 입력하고 엔터를 누르세요"
             value={tagInput}
           />
+          {tagOptions.length > 0 && (
+            <datalist id="linkbox-tag-options">
+              {tagOptions.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+          )}
         </label>
         {formData.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">

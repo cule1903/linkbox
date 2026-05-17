@@ -9,6 +9,7 @@ import { AppPage, AppSidebar } from "@/components/layout/app-sidebar";
 import { LinkDetailPage } from "@/components/links/link-detail-page";
 import { LinkForm } from "@/components/links/link-form";
 import { LinkPageFilters, LinksPage } from "@/components/links/links-page";
+import { TagsPage } from "@/components/tags/tags-page";
 import { Dialog } from "@/components/ui/dialog";
 import {
   createCategory,
@@ -33,9 +34,19 @@ import {
   updateLink,
 } from "@/lib/links";
 import { buildLinksHref, getCurrentPageFromRoute, type AppRoute } from "@/lib/routes";
+import {
+  createTag,
+  deleteTag,
+  getTagMutationErrorMessage,
+  getTagOptionNames,
+  listTags,
+  syncLinkTags,
+  updateTag,
+} from "@/lib/tags";
 import { mockUser } from "@/lib/mock-links";
 import type { CategoryItem } from "@/types/category";
 import type { LinkDraft, LinkItem } from "@/types/link";
+import type { TagItem } from "@/types/tag";
 
 const subscribeToHydration = () => () => {};
 
@@ -50,6 +61,7 @@ const pageHrefs: Record<AppPage, string> = {
   links: "/links",
   favorites: "/favorites",
   categories: "/categories",
+  tags: "/tags",
 };
 
 export function LinkBoxApp({
@@ -70,6 +82,7 @@ export function LinkBoxApp({
   const [userEmail, setUserEmail] = useState(mockUser.email);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [tags, setTags] = useState<TagItem[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<LinkItem | undefined>();
   const [authError, setAuthError] = useState<string | null>(null);
@@ -81,6 +94,7 @@ export function LinkBoxApp({
   const [isLinksLoading, setIsLinksLoading] = useState(false);
   const [isLinkSaving, setIsLinkSaving] = useState(false);
   const [isCategorySaving, setIsCategorySaving] = useState(false);
+  const [isTagSaving, setIsTagSaving] = useState(false);
 
   const currentPage = getCurrentPageFromRoute(route);
   const selectedLink = detailLinkId
@@ -101,6 +115,29 @@ export function LinkBoxApp({
         if (link.category) {
           acc[link.category] = (acc[link.category] ?? 0) + 1;
         }
+
+        return acc;
+      }, {}),
+    [links],
+  );
+  const tagOptions = useMemo(
+    () =>
+      getTagOptionNames(
+        tags,
+        links.flatMap((link) => link.tags),
+      ),
+    [links, tags],
+  );
+  const tagLinkCounts = useMemo(
+    () =>
+      links.reduce<Record<string, number>>((acc, link) => {
+        link.tags.forEach((tagName) => {
+          const normalizedName = tagName.trim().toLowerCase();
+
+          if (normalizedName) {
+            acc[normalizedName] = (acc[normalizedName] ?? 0) + 1;
+          }
+        });
 
         return acc;
       }, {}),
@@ -132,6 +169,7 @@ export function LinkBoxApp({
       if (!email) {
         setLinks([]);
         setCategories([]);
+        setTags([]);
         router.replace("/dashboard");
       }
     });
@@ -152,9 +190,10 @@ export function LinkBoxApp({
       setLinksError(null);
 
       try {
-        const [linkItems, savedCategoryItems] = await Promise.all([
+        const [linkItems, savedCategoryItems, tagItems] = await Promise.all([
           listLinks(supabase!),
           listCategories(supabase!),
+          listTags(supabase!),
         ]);
         const categoryItems =
           savedCategoryItems.length > 0
@@ -168,6 +207,7 @@ export function LinkBoxApp({
         if (isMounted) {
           setLinks(linkItems);
           setCategories(categoryItems);
+          setTags(tagItems);
         }
       } catch (error) {
         if (isMounted) {
@@ -253,6 +293,7 @@ export function LinkBoxApp({
     setUserEmail(mockUser.email);
     setLinks([]);
     setCategories([]);
+    setTags([]);
     router.replace("/dashboard");
   }
 
@@ -279,13 +320,27 @@ export function LinkBoxApp({
     try {
       if (editingId) {
         const updatedLink = await updateLink(supabase, editingId, draft);
+        const syncedTags = await syncLinkTags(
+          supabase,
+          updatedLink.id,
+          updatedLink.tags,
+          userId,
+        );
         setLinks((current) =>
           current.map((link) => (link.id === editingId ? updatedLink : link)),
         );
+        setTags((current) => mergeTags(current, syncedTags));
         setLinksNotice(getLinkSuccessMessage("update"));
       } else {
         const createdLink = await createLink(supabase, draft, userId);
+        const syncedTags = await syncLinkTags(
+          supabase,
+          createdLink.id,
+          createdLink.tags,
+          userId,
+        );
         setLinks((current) => [createdLink, ...current]);
+        setTags((current) => mergeTags(current, syncedTags));
         setLinksNotice(getLinkSuccessMessage("create"));
       }
 
@@ -349,10 +404,17 @@ export function LinkBoxApp({
 
     try {
       const updatedLink = await updateLink(supabase, id, nextDraft);
+      const syncedTags = await syncLinkTags(
+        supabase,
+        updatedLink.id,
+        updatedLink.tags,
+        target.user_id,
+      );
 
       setLinks((current) =>
         current.map((link) => (link.id === id ? updatedLink : link)),
       );
+      setTags((current) => mergeTags(current, syncedTags));
       setLinksNotice(getLinkSuccessMessage("favorite"));
     } catch (error) {
       setLinksError(
@@ -477,6 +539,131 @@ export function LinkBoxApp({
     }
   }
 
+  async function handleCreateTag(name: string) {
+    if (!supabase || !userId) {
+      setLinksError("로그인 후 태그를 저장할 수 있습니다.");
+      return;
+    }
+
+    setIsTagSaving(true);
+    setLinksError(null);
+    setLinksNotice(null);
+
+    try {
+      const tag = await createTag(supabase, name, userId);
+      setTags((current) => mergeTags(current, [tag]));
+      setLinksNotice("태그를 추가했습니다.");
+    } catch (error) {
+      setLinksError(
+        error instanceof Error ? error.message : getTagMutationErrorMessage(),
+      );
+    } finally {
+      setIsTagSaving(false);
+    }
+  }
+
+  async function handleRenameTag(tag: TagItem, name: string) {
+    if (!supabase) {
+      setLinksError("로그인 후 태그를 수정할 수 있습니다.");
+      return;
+    }
+
+    const previousTags = tags;
+    const previousLinks = links;
+    const normalizedName = name.trim().toLowerCase();
+    setIsTagSaving(true);
+    setLinksError(null);
+    setLinksNotice(null);
+
+    try {
+      const updatedTag = await updateTag(supabase, tag.id, normalizedName);
+      const renamedLinks = links.filter((link) =>
+        link.tags.some((tagName) => tagName.trim().toLowerCase() === tag.name),
+      );
+
+      const updatedLinks = await Promise.all(
+        renamedLinks.map((link) =>
+          updateLink(supabase, link.id, {
+            title: link.title,
+            url: link.url,
+            description: link.description,
+            category: link.category,
+            tags: Array.from(
+              new Set(
+                link.tags.map((tagName) =>
+                  tagName.trim().toLowerCase() === tag.name
+                    ? updatedTag.name
+                    : tagName,
+                ),
+              ),
+            ),
+            priority: link.priority,
+            status: link.status,
+            is_favorite: link.is_favorite,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        updatedLinks.map((link) =>
+          syncLinkTags(supabase, link.id, link.tags, link.user_id),
+        ),
+      );
+
+      setTags((current) =>
+        current
+          .map((item) => (item.id === tag.id ? updatedTag : item))
+          .sort(sortTags),
+      );
+      setLinks((current) =>
+        current.map(
+          (link) => updatedLinks.find((updated) => updated.id === link.id) ?? link,
+        ),
+      );
+      setLinksNotice("태그 이름을 수정했습니다.");
+    } catch (error) {
+      setTags(previousTags);
+      setLinks(previousLinks);
+      setLinksError(
+        error instanceof Error ? error.message : getTagMutationErrorMessage(),
+      );
+    } finally {
+      setIsTagSaving(false);
+    }
+  }
+
+  async function handleDeleteTag(tag: TagItem) {
+    if (!supabase) {
+      setLinksError("로그인 후 태그를 삭제할 수 있습니다.");
+      return;
+    }
+
+    if ((tagLinkCounts[tag.name] ?? 0) > 0) {
+      setLinksError("연결된 링크가 있는 태그는 삭제할 수 없습니다.");
+      return;
+    }
+
+    const previousTags = tags;
+    setIsTagSaving(true);
+    setLinksError(null);
+    setLinksNotice(null);
+    setTags((current) => current.filter((item) => item.id !== tag.id));
+
+    try {
+      await deleteTag(supabase, tag.id);
+      setLinksNotice("태그를 삭제했습니다.");
+    } catch (error) {
+      setTags(previousTags);
+      setLinksError(
+        error instanceof Error
+          ? error.message
+          : "태그 삭제 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setIsTagSaving(false);
+    }
+  }
+
   function handleNavigate(page: AppPage) {
     router.push(pageHrefs[page]);
   }
@@ -584,6 +771,17 @@ export function LinkBoxApp({
                 />
               )}
 
+              {route === "tags" && (
+                <TagsPage
+                  isSaving={isTagSaving}
+                  linkCounts={tagLinkCounts}
+                  onCreateTag={handleCreateTag}
+                  onDeleteTag={handleDeleteTag}
+                  onRenameTag={handleRenameTag}
+                  tags={tags}
+                />
+              )}
+
               {route === "detail" &&
                 (selectedLink ? (
                   <LinkDetailPage
@@ -615,13 +813,28 @@ export function LinkBoxApp({
           onCancel={() => setIsFormOpen(false)}
           isSaving={isLinkSaving}
           onSave={handleSaveLink}
+          tagOptions={tagOptions}
         />
       </Dialog>
     </div>
   );
 }
 
+function mergeTags(currentTags: TagItem[], nextTags: TagItem[]) {
+  const tagMap = new Map<string, TagItem>();
+
+  [...currentTags, ...nextTags].forEach((tag) => {
+    tagMap.set(tag.id, tag);
+  });
+
+  return Array.from(tagMap.values()).sort(sortTags);
+}
+
 function sortCategories(a: CategoryItem, b: CategoryItem) {
+  return a.name.localeCompare(b.name, "ko-KR");
+}
+
+function sortTags(a: TagItem, b: TagItem) {
   return a.name.localeCompare(b.name, "ko-KR");
 }
 

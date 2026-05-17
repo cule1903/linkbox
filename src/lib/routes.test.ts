@@ -17,4 +17,5 @@ test("getCurrentPageFromRoute maps nested URLs to sidebar sections", () => {
   assert.equal(getCurrentPageFromRoute("detail"), "links");
   assert.equal(getCurrentPageFromRoute("favorites"), "favorites");
   assert.equal(getCurrentPageFromRoute("categories"), "categories");
+  assert.equal(getCurrentPageFromRoute("tags"), "tags");
 });

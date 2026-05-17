@@ -4,12 +4,13 @@ import {
   LayoutDashboard,
   LogOut,
   Star,
+  Tags,
   User,
 } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 
-export type AppPage = "dashboard" | "links" | "favorites" | "categories";
+export type AppPage = "dashboard" | "links" | "favorites" | "categories" | "tags";
 
 type AppSidebarProps = {
   currentPage: AppPage;
@@ -23,6 +24,7 @@ const menuItems = [
   { title: "전체 링크", icon: Bookmark, page: "links" as const },
   { title: "즐겨찾기", icon: Star, page: "favorites" as const },
   { title: "카테고리", icon: FolderKanban, page: "categories" as const },
+  { title: "태그", icon: Tags, page: "tags" as const },
 ];
 
 export function AppSidebar({
