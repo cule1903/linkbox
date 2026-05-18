@@ -123,3 +123,4 @@ Prepare Vercel deployment settings and final QA checklist.
 - Added deployed Vercel URL `https://linkbox-five.vercel.app/` to README.
 - Rewrote README into a full project proposal and implementation summary format covering planning background, core features, architecture, DB design, routes, decisions, local setup, and verification.
 - Removed operational Supabase setup and Vercel deployment checklist sections from README to keep it focused as a project explanation document.
+- Condensed README into a GitHub-friendly project overview with concise sections for introduction, features, stack, routes, data model, implementation points, local setup, verification, and status.
